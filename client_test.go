@@ -1,6 +1,9 @@
 package bunq_ledger
 
 import (
+	"bytes"
+	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"testing"
 )
@@ -26,7 +29,11 @@ func TestRegisterDevice(t *testing.T) {
 	}
 	c.URL.Path = "/v1/installation"
 
-	r, err := http.NewRequest(http.MethodPost, c.URL.String(), nil)
+	postBody, _ := json.Marshal(map[string]string{
+		"client_public_key": "string",
+	})
+
+	r, err := http.NewRequest(http.MethodPost, c.URL.String(), bytes.NewBuffer(postBody))
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
@@ -37,7 +44,17 @@ func TestRegisterDevice(t *testing.T) {
 
 	client := &http.Client{}
 	resp, err := client.Do(r)
+	if err != nil {
+		t.Logf("%v", err)
+	}
 
-	t.Logf("%v", resp)
-	t.Logf("%v", err)
+	t.Logf("Resp: %v", resp)
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		t.Logf("%v", err)
+	}
+
+	sb := string(body)
+	t.Logf("Body: %s", sb)
 }
