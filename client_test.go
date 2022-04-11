@@ -2,7 +2,11 @@ package bunq_ledger
 
 import (
 	"bytes"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
 	"encoding/json"
+	"encoding/pem"
 	"io/ioutil"
 	"net/http"
 	"testing"
@@ -29,8 +33,28 @@ func TestRegisterDevice(t *testing.T) {
 	}
 	c.URL.Path = "/v1/installation"
 
+	private_key, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		t.Logf("%v", err)
+	}
+
+	pubKey, err := x509.MarshalPKIXPublicKey(private_key.Public())
+	if err != nil {
+		t.Logf("%v", err)
+	}
+
+	pubKeyPemBlock := pem.Block{
+		Type:    "PUBLIC KEY",
+		Headers: nil,
+		Bytes:   pubKey,
+	}
+
+	pubKeyString := string(pem.EncodeToMemory(&pubKeyPemBlock))
+
+	t.Logf("PublicKey: %v", pubKeyString)
+
 	postBody, _ := json.Marshal(map[string]string{
-		"client_public_key": "string",
+		"client_public_key": pubKeyString,
 	})
 
 	r, err := http.NewRequest(http.MethodPost, c.URL.String(), bytes.NewBuffer(postBody))
