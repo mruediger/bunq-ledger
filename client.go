@@ -80,9 +80,15 @@ func (c *Client) postInstallation() (string, error) {
 	}
 
 	sb := string(body)
-	fmt.Printf("Body: %s", sb)
+	fmt.Printf("Body: %q", sb)
+
+	parseResponseBody(body)
 
 	return "foo", nil
+}
+
+func parseResponseBody(body []byte) {
+
 }
 
 func (c *Client) postDeviceServer(token string, apiKey string) error {
