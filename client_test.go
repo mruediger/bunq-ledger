@@ -31,6 +31,23 @@ func TestRegisterDevice(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
+
+	apiKey := "foo"
+
+	token, err := c.postInstallation()
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+
+	c.postDeviceServer(token, apiKey)
+	c.postSessionServer(token, apiKey)
+}
+
+func OldTestRegisterDevice(t *testing.T) {
+	c, err := NewClient(sandboxUrl)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
 	c.URL.Path = "/v1/installation"
 
 	private_key, err := rsa.GenerateKey(rand.Reader, 2048)
