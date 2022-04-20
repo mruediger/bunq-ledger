@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -82,13 +83,35 @@ func (c *Client) postInstallation() (string, error) {
 	sb := string(body)
 	fmt.Printf("Body: %q", sb)
 
-	parseResponseBody(body)
+	parseInstallationResponseBody(resp.Body)
 
 	return "foo", nil
 }
 
-func parseResponseBody(body []byte) {
+type InstallationResponse struct {
+	Token           string `json:"token"`
+	Created         string `json:"created"`
+	Updated         string `json:"updated"`
+	ServerPublicKey string `json:"server_public_key"`
+}
 
+func parseInstallationResponseBody(body io.Reader) (InstallationResponse, error) {
+	var response map[string][]map[string]json.RawMessage
+	err := json.NewDecoder(body).Decode(&response)
+	if err != nil {
+		return InstallationResponse{}, err
+	}
+
+	var result InstallationResponse
+	for _, thing := range response["Response"] {
+		for _, v := range thing {
+			err := json.Unmarshal(v, &result)
+			if err != nil {
+				return result, err
+			}
+		}
+	}
+	return result, nil
 }
 
 func (c *Client) postDeviceServer(token string, apiKey string) error {
